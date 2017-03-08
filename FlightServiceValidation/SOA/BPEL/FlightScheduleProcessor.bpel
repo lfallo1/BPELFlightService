@@ -35,6 +35,10 @@
       List of services participating in this BPEL process               
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   -->
+  <import namespace="saibot.airport/services/flightschedule" location="../Schemas/FlightScheduleService.xsd"
+          importType="http://www.w3.org/2001/XMLSchema"/>
+  <import namespace="http://schemas.oracle.com/bpel/extension" location="../WSDLs/RuntimeFault.wsdl"
+          importType="http://schemas.xmlsoap.org/wsdl/"/>
   <import namespace="saibot.airport/services/flightschedule" location="../WSDLs/FlightScheduleServiceWrapper2.wsdl"
           importType="http://schemas.xmlsoap.org/wsdl/" ui:processWSDL="true"/>
   <partnerLinks>
@@ -58,6 +62,7 @@
 
     <!-- Reference to the message that will be returned to the requester-->
     <variable name="outputVariable" messageType="ns1:replyMessage"/>
+    <variable name="processingResults" type="ns1:processingResultsType"/>
   </variables>
 
   <!-- 
@@ -71,6 +76,84 @@
 
     <!-- Receive input from requestor. (Note: This maps to operation defined in FlightScheduleProcessor.wsdl) -->
     <receive name="receiveInput" partnerLink="flightscheduleprocessor_client" portType="ns1:FlightScheduleServicePortType" operation="submitFlightSchedule" variable="inputVariable" createInstance="yes"/>
+    <assign name="initializeProcessingResultsVariable">
+      <copy>
+        <from><literal><processingResults xmlns:def="saibot.airport/services/flightschedule"
+                                          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                                          xsi:type="def:processingResultsType">
+</processingResults></literal></from>
+        <to expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">$processingResults</to>
+      </copy>
+    </assign>
+    <scope name="Validations">
+      <sequence name="ValidationWrapper">
+        <scope name="SchemaValidation">
+          <variables>
+            <variable name="validationFault" messageType="bpelx:RuntimeFaultMessage"/>
+          </variables>
+          <faultHandlers>
+            <catch bpelx:name="handleValidationFault" faultName="bpel:invalidVariables" faultVariable="validationFault"
+                   faultMessageType="bpelx:RuntimeFaultMessage">
+              <assign name="AssignError">
+                <copy>
+                  <from><literal><fse:ProcessingResult xmlns:fse="saibot.airport/services/flightschedule">
+<fse:ResultCode>SRT-011</fse:ResultCode>
+</fse:ProcessingResult></literal></from>
+                  <to expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">$processingResults</to>
+                </copy>
+                <copy bpelx:insertMissingToData="yes">
+                  <from>$validationFault.summary</from>
+                  <to expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">$processingResults/ns1:ProcessingResult/ns1:Description</to>
+                </copy>
+                <copy bpelx:insertMissingToData="yes">
+                  <from>$inputVariable.in</from>
+                  <to expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">$processingResults/ns1:ProcessingResult/ns1:ContextTrace</to>
+                </copy>
+              </assign>
+            </catch>
+          </faultHandlers>
+          <sequence>
+            <validate name="SchemaValidation" variables="inputVariable"/>
+          </sequence>
+        </scope>
+        <scope name="CustomValidation">
+          <empty name="Empty2"/>
+        </scope>
+        <scope name="AirlineValueMap">
+          <empty name="Empty3"/>
+        </scope>
+        <scope name="ContinueOrReturn">
+          <if name="IfValidationErrors">
+            <condition expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">count($processingResults/ns1:ProcessingResult) &gt; 0</condition>
+            <sequence name="Sequence1">
+              <assign name="UpdateOutputVariable">
+                <extensionAssignOperation>
+                  <bpelx:append>
+                    <bpelx:from><bpelx:literal><fse:ProcessingResults xmlns:fse="saibot.airport/services/flightschedule"/></bpelx:literal></bpelx:from>
+                    <bpelx:to expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">$outputVariable.out</bpelx:to>
+                  </bpelx:append>
+                </extensionAssignOperation>
+                <extensionAssignOperation>
+                  <bpelx:append>
+                    <bpelx:from expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">$processingResults/ns1:ProcessingResult</bpelx:from>
+                    <bpelx:to expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">$outputVariable.out/ns1:ProcessingResults/ns1:ProcessingResult</bpelx:to>
+                  </bpelx:append>
+                </extensionAssignOperation>
+              </assign>
+              <reply name="ReplyWithError" partnerLink="flightscheduleprocessor_client" variable="outputVariable"
+                     portType="ns1:FlightScheduleServicePortType" operation="submitFlightSchedule"/>
+              <exit name="Exit1"/>
+            </sequence>
+            <else>
+              <empty name="Empty6"/>
+            </else>
+          </if>
+        </scope>
+      </sequence>
+    </scope>
+    <scope name="ProcessingAndRouting">
+      <empty name="Empty5"/>
+    </scope>
     <assign name="setHardCodedValues">
       <copy>
         <from>1</from>
