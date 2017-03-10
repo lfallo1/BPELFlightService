@@ -13,6 +13,8 @@
            xmlns:sca-ext="http://xmlns.oracle.com/sca/1.0-ext">
   <import namespace="saibot.airport/services/flightschedule" location="WSDLs/FlightScheduleServiceWrapper2.wsdl"
           importType="wsdl"/>
+  <import namespace="http://www.webservicex.net/" location="WSDLs/geoipservice.asmx.wsdl" importType="wsdl"/>
+  <import namespace="http://www.webservicex.net/" location="WSDLs/geoipservice.asmxWrapper.wsdl" importType="wsdl"/>
   <service name="flightscheduleprocessor_client_ep" ui:wsdlLocation="WSDLs/FlightScheduleServiceWrapper2.wsdl">
     <interface.wsdl interface="saibot.airport/services/flightschedule#wsdl.interface(FlightScheduleServicePortType)"/>
     <binding.ws port="saibot.airport/services/flightschedule#wsdl.endpoint(flightscheduleprocessor_client_ep/FlightScheduleServicePort)"/>
@@ -25,10 +27,28 @@
       <service name="flightscheduleprocessor_client" ui:wsdlLocation="WSDLs/FlightScheduleServiceWrapper2.wsdl">
         <interface.wsdl interface="saibot.airport/services/flightschedule#wsdl.interface(FlightScheduleServicePortType)"/>
       </service>
+      <reference name="GeoWebService" ui:wsdlLocation="WSDLs/geoipservice.asmxWrapper.wsdl">
+        <interface.wsdl interface="http://www.webservicex.net/#wsdl.interface(GeoIPServiceSoap)"/>
+      </reference>
     </componentType>
   </component>
+  <reference name="GeoWebService" ui:wsdlLocation="WSDLs/geoipservice.asmx.wsdl">
+    <interface.wsdl interface="http://www.webservicex.net/#wsdl.interface(GeoIPServiceSoap)"/>
+    <binding.ws port="http://www.webservicex.net/#wsdl.endpoint(GeoIPService/GeoIPServiceSoap)"
+                location="http://www.webservicex.net/geoipservice.asmx?wsdl" soapVersion="1.1">
+      <property name="weblogic.wsee.wsat.transaction.flowOption" type="xs:string" many="false">WSDLDriven</property>
+    </binding.ws>
+    <binding.ws port="http://www.webservicex.net/#wsdl.endpoint(GeoIPService/GeoIPServiceSoap12)"
+                location="http://www.webservicex.net/geoipservice.asmx?wsdl" soapVersion="1.2">
+      <property name="weblogic.wsee.wsat.transaction.flowOption" type="xs:string" many="false">WSDLDriven</property>
+    </binding.ws>
+  </reference>
   <wire>
     <source.uri>flightscheduleprocessor_client_ep</source.uri>
     <target.uri>FlightScheduleProcessor/flightscheduleprocessor_client</target.uri>
+  </wire>
+  <wire>
+    <source.uri>FlightScheduleProcessor/GeoWebService</source.uri>
+    <target.uri>GeoWebService</target.uri>
   </wire>
 </composite>

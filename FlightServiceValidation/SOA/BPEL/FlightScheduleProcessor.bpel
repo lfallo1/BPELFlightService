@@ -28,7 +28,7 @@
          xmlns:ids="http://xmlns.oracle.com/bpel/services/IdentityService/xpath"
          xmlns:ldap="http://schemas.oracle.com/xpath/extension/ldap" xmlns:ns2="saibot.airport/data/reference"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ns3="saibot/validation"
-         xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+         xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:ns4="http://www.webservicex.net/">
 
   <!-- 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -85,6 +85,7 @@
       with the client role are automatically set using WS-Addressing.
     -->
     <partnerLink name="flightscheduleprocessor_client" partnerLinkType="ns1:FlightScheduleProcessor" myRole="FlightScheduleServicePortType"/>
+    <partnerLink name="GeoWebService" partnerLinkType="ns4:GeoWebService" partnerRole="GeoIPServiceSoap"/>
   </partnerLinks>
 
   <!-- 
@@ -103,6 +104,8 @@
     <variable name="numberOfFlights" type="xsd:int">
       <from>0</from>
     </variable>
+    <variable name="InvokeGeoService_GetGeoIP_InputVariable" messageType="ns4:GetGeoIPSoapIn"/>
+    <variable name="InvokeGeoService_GetGeoIP_OutputVariable" messageType="ns4:GetGeoIPSoapOut"/>
   </variables>
 
   <!-- 
@@ -116,26 +119,6 @@
 
     <!-- Receive input from requestor. (Note: This maps to operation defined in FlightScheduleProcessor.wsdl) -->
     <receive name="receiveInput" partnerLink="flightscheduleprocessor_client" portType="ns1:FlightScheduleServicePortType" operation="submitFlightSchedule" variable="inputVariable" createInstance="yes"/>
-    <extensionActivity>
-      <bpelx:exec name="CalculateNumberOfFlights">
-        <![CDATA[XMLElement flightNumberElement = (XMLElement) getVariableData("inputVariable", "in", "/ns1:submitScheduledFlightRequestMessage/ns1:FlightNumber");  
-  addAuditTrailEntry("step 1");  
-  String flightNumber = flightNumberElement.getTextContent();  
-  addAuditTrailEntry("step 1");  
-  XMLElement startDate = (XMLElement) getVariableData("inputVariable", "in", "/ns1:submitScheduledFlightRequestMessage/ns1:TimePlanningUnit/ns2:startDate");  
-  addAuditTrailEntry("step 1");  
-  XMLElement endDate = (XMLElement) getVariableData("inputVariable", "in", "/ns1:submitScheduledFlightRequestMessage/ns1:TimePlanningUnit/ns2:endDate");  
-  addAuditTrailEntry("step 1");  
-  XMLElement daysOfWeek = (XMLElement) getVariableData("inputVariable", "in", "/ns1:submitScheduledFlightRequestMessage/ns1:TimePlanningUnit/ns2:DaysOfWeek");  
-  addAuditTrailEntry("step 1");  
-  int numberOfDaysPerWeek = daysOfWeek.getElementsByTagName("day").getLength();  
-  addAuditTrailEntry("step 1");  
-  int flightCount = FlightScheduleProcessor.calculateNumberOfFlights(startDate.getTextContent(), endDate.getTextContent(),numberOfDaysPerWeek);  
-  addAuditTrailEntry("step 1");  
-  addAuditTrailEntry("Java Embedding - Calculated number of flights for flightnumber "+ flightNumber +" as "+ flightCount);  
-  setVariableData("numberOfFlights", flightCount);]]>
-      </bpelx:exec>
-    </extensionActivity>
     <scope name="Validations">
       <sequence name="ValidationWrapper">
         <scope name="SchemaValidation">
@@ -337,6 +320,42 @@
         <to expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">$outputVariable.out/ns1:ProcessingResults/ns1:ProcessingResult/ns1:Description</to>
       </copy>
     </assign>
+    <flow name="Flow1">
+      <sequence name="CalculateNumberOfFlightsSequence">
+        <extensionActivity>
+          <bpelx:exec name="CalculateNumberOfFlights">
+            <![CDATA[XMLElement flightNumberElement = (XMLElement) getVariableData("inputVariable", "in", "/ns1:submitScheduledFlightRequestMessage/ns1:FlightNumber");  
+  addAuditTrailEntry("step 1");  
+  String flightNumber = flightNumberElement.getTextContent();  
+  addAuditTrailEntry("step 1");  
+  XMLElement startDate = (XMLElement) getVariableData("inputVariable", "in", "/ns1:submitScheduledFlightRequestMessage/ns1:TimePlanningUnit/ns2:startDate");  
+  addAuditTrailEntry("step 1");  
+  XMLElement endDate = (XMLElement) getVariableData("inputVariable", "in", "/ns1:submitScheduledFlightRequestMessage/ns1:TimePlanningUnit/ns2:endDate");  
+  addAuditTrailEntry("step 1");  
+  XMLElement daysOfWeek = (XMLElement) getVariableData("inputVariable", "in", "/ns1:submitScheduledFlightRequestMessage/ns1:TimePlanningUnit/ns2:DaysOfWeek");  
+  addAuditTrailEntry("step 1");  
+  int numberOfDaysPerWeek = daysOfWeek.getElementsByTagName("day").getLength();  
+  addAuditTrailEntry("step 1");  
+  int flightCount = FlightScheduleProcessor.calculateNumberOfFlights(startDate.getTextContent(), endDate.getTextContent(),numberOfDaysPerWeek);  
+  addAuditTrailEntry("step 1");  
+  addAuditTrailEntry("Java Embedding - Calculated number of flights for flightnumber "+ flightNumber +" as "+ flightCount);  
+  setVariableData("numberOfFlights", flightCount);]]>
+          </bpelx:exec>
+        </extensionActivity>
+      </sequence>
+      <sequence name="Sequence7">
+        <assign name="BogusAssignIpLookupInput">
+          <copy>
+            <from>"63.88.62.157"</from>
+            <to expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">$InvokeGeoService_GetGeoIP_InputVariable.parameters/ns4:IPAddress</to>
+          </copy>
+        </assign>
+        <invoke name="InvokeGeoService" partnerLink="GeoWebService"
+                portType="ns4:GeoIPServiceSoap" operation="GetGeoIP"
+                inputVariable="InvokeGeoService_GetGeoIP_InputVariable"
+                outputVariable="InvokeGeoService_GetGeoIP_OutputVariable" bpelx:invokeAsDetail="no"/>
+      </sequence>
+    </flow>
     <!-- Generate reply to synchronous request -->
     <reply name="replyOutput" partnerLink="flightscheduleprocessor_client" portType="ns1:FlightScheduleServicePortType" operation="submitFlightSchedule" variable="outputVariable"/>
   </sequence>
