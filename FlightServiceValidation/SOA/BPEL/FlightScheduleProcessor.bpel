@@ -27,7 +27,8 @@
          xmlns:xdk="http://schemas.oracle.com/bpel/extension/xpath/function/xdk"
          xmlns:ids="http://xmlns.oracle.com/bpel/services/IdentityService/xpath"
          xmlns:ldap="http://schemas.oracle.com/xpath/extension/ldap" xmlns:ns2="saibot.airport/data/reference"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ns3="saibot/validation"
+         xmlns:xsd="http://www.w3.org/2001/XMLSchema">
 
   <!-- 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -35,12 +36,48 @@
       List of services participating in this BPEL process               
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   -->
+  <bpelx:inlineSubProcess name="ReportError">
+    <bpelx:annotation>
+      <bpelx:general>
+        <bpelx:property name="userDescription">
+          <![CDATA[Exit composite with an error response]]>
+        </bpelx:property>
+        <bpelx:property name="userLabel">
+          <![CDATA[ExitWithError]]>
+        </bpelx:property>
+      </bpelx:general>
+    </bpelx:annotation>
+    <variables>
+      <variable name="code" type="xsd:string"/>
+      <variable name="summary" type="xsd:string"/>
+      <variable name="description" type="xsd:string"/>
+    </variables>
+    <sequence name="GeneralErrorSequence">
+      <assign name="AssignErrorMessage">
+        <copy>
+          <from>$inputVariable.in</from>
+          <to expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">$outputVariable.out/ns1:ProcessingResults/ns1:ProcessingResult/ns1:ContextTrace</to>
+        </copy>
+        <copy>
+          <from>concat($code, ': ', $summary, ' ---  ', $description)</from>
+          <to expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">$outputVariable.out/ns1:ProcessingResults/ns1:ProcessingResult/ns1:Description</to>
+        </copy>
+      </assign>
+      <reply name="ReplyInvalidICAO" partnerLink="flightscheduleprocessor_client" variable="outputVariable"
+             portType="ns1:FlightScheduleServicePortType" operation="submitFlightSchedule"/>
+      <exit name="Exit2"/>
+    </sequence>
+  </bpelx:inlineSubProcess>
+  <import namespace="saibot/validation" location="../Schemas/Validation.xsd"
+          importType="http://www.w3.org/2001/XMLSchema"/>
   <import namespace="saibot.airport/services/flightschedule" location="../Schemas/FlightScheduleService.xsd"
           importType="http://www.w3.org/2001/XMLSchema"/>
   <import namespace="http://schemas.oracle.com/bpel/extension" location="../WSDLs/RuntimeFault.wsdl"
           importType="http://schemas.xmlsoap.org/wsdl/"/>
   <import namespace="saibot.airport/services/flightschedule" location="../WSDLs/FlightScheduleServiceWrapper2.wsdl"
           importType="http://schemas.xmlsoap.org/wsdl/" ui:processWSDL="true"/>
+ <import location="oracle.xml.parser.v2.XMLElement" importType="http://schemas.oracle.com/bpel/extension/java" />
+ <import location="saibot.airport.flightscheduleservice.FlightScheduleProcessor" importType="http://schemas.oracle.com/bpel/extension/java" />          
   <partnerLinks>
     <!-- 
       The 'client' role represents the requester of this service. It is 
@@ -63,6 +100,9 @@
     <!-- Reference to the message that will be returned to the requester-->
     <variable name="outputVariable" messageType="ns1:replyMessage"/>
     <variable name="processingResults" type="ns1:processingResultsType"/>
+    <variable name="numberOfFlights" type="xsd:int">
+      <from>0</from>
+    </variable>
   </variables>
 
   <!-- 
@@ -76,15 +116,26 @@
 
     <!-- Receive input from requestor. (Note: This maps to operation defined in FlightScheduleProcessor.wsdl) -->
     <receive name="receiveInput" partnerLink="flightscheduleprocessor_client" portType="ns1:FlightScheduleServicePortType" operation="submitFlightSchedule" variable="inputVariable" createInstance="yes"/>
-    <assign name="initializeProcessingResultsVariable">
-      <copy>
-        <from><literal><processingResults xmlns:def="saibot.airport/services/flightschedule"
-                                          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                                          xsi:type="def:processingResultsType">
-</processingResults></literal></from>
-        <to expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">$processingResults</to>
-      </copy>
-    </assign>
+    <extensionActivity>
+      <bpelx:exec name="CalculateNumberOfFlights">
+        <![CDATA[XMLElement flightNumberElement = (XMLElement) getVariableData("inputVariable", "in", "/ns1:submitScheduledFlightRequestMessage/ns1:FlightNumber");  
+  addAuditTrailEntry("step 1");  
+  String flightNumber = flightNumberElement.getTextContent();  
+  addAuditTrailEntry("step 1");  
+  XMLElement startDate = (XMLElement) getVariableData("inputVariable", "in", "/ns1:submitScheduledFlightRequestMessage/ns1:TimePlanningUnit/ns2:startDate");  
+  addAuditTrailEntry("step 1");  
+  XMLElement endDate = (XMLElement) getVariableData("inputVariable", "in", "/ns1:submitScheduledFlightRequestMessage/ns1:TimePlanningUnit/ns2:endDate");  
+  addAuditTrailEntry("step 1");  
+  XMLElement daysOfWeek = (XMLElement) getVariableData("inputVariable", "in", "/ns1:submitScheduledFlightRequestMessage/ns1:TimePlanningUnit/ns2:DaysOfWeek");  
+  addAuditTrailEntry("step 1");  
+  int numberOfDaysPerWeek = daysOfWeek.getElementsByTagName("day").getLength();  
+  addAuditTrailEntry("step 1");  
+  int flightCount = FlightScheduleProcessor.calculateNumberOfFlights(startDate.getTextContent(), endDate.getTextContent(),numberOfDaysPerWeek);  
+  addAuditTrailEntry("step 1");  
+  addAuditTrailEntry("Java Embedding - Calculated number of flights for flightnumber "+ flightNumber +" as "+ flightCount);  
+  setVariableData("numberOfFlights", flightCount);]]>
+      </bpelx:exec>
+    </extensionActivity>
     <scope name="Validations">
       <sequence name="ValidationWrapper">
         <scope name="SchemaValidation">
@@ -97,17 +148,17 @@
               <assign name="AssignError">
                 <copy>
                   <from><literal><fse:ProcessingResult xmlns:fse="saibot.airport/services/flightschedule">
-<fse:ResultCode>SRT-011</fse:ResultCode>
+   <fse:ResultCode>SBT-011</fse:ResultCode>
 </fse:ProcessingResult></literal></from>
-                  <to expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">$processingResults</to>
-                </copy>
-                <copy bpelx:insertMissingToData="yes">
-                  <from>$validationFault.summary</from>
-                  <to expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">$processingResults/ns1:ProcessingResult/ns1:Description</to>
+                  <to expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">$processingResults/ns1:ProcessingResult</to>
                 </copy>
                 <copy bpelx:insertMissingToData="yes">
                   <from>$inputVariable.in</from>
                   <to expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">$processingResults/ns1:ProcessingResult/ns1:ContextTrace</to>
+                </copy>
+                <copy bpelx:insertMissingToData="yes">
+                  <from>$validationFault.summary</from>
+                  <to expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">$processingResults/ns1:ProcessingResult/ns1:Description</to>
                 </copy>
               </assign>
             </catch>
@@ -117,14 +168,118 @@
           </sequence>
         </scope>
         <scope name="CustomValidation">
-          <empty name="Empty2"/>
+          <variables>
+            <variable name="validationResults" type="ns3:Validation"/>
+          </variables>
+          <sequence name="Sequence2">
+            <assign name="ValidateScheduledFlightWithXQuery">
+              <copy>
+                <from>ora:processXQuery10('../Validations/ValidateSubmitScheduledFlightRequest.xqy', 'submitScheduledFlightRequest',$inputVariable.in)</from>
+                <to expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">$validationResults</to>
+              </copy>
+            </assign>
+            <if name="IfCustomValidationErrors">
+              <documentation>
+                <![CDATA[HasErrors]]>
+              </documentation>
+              <condition>count($validationResults/ns3:ValidationErrorList/ns3:ValidationError) &gt; 0</condition>
+              <forEach parallel="no" counterName="counter" name="ProcessAllValidationErrors">
+                <startCounterValue expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">1</startCounterValue>
+                <finalCounterValue>count($validationResults/ns3:ValidationErrorList/ns3:ValidationError)</finalCounterValue>
+                <scope name="Scope1">
+                  <sequence name="Sequence3">
+                    <assign name="ValidationErrorToProcessResults">
+                      <extensionAssignOperation>
+                        <bpelx:insertBefore>
+                          <bpelx:from><bpelx:literal><ProcessingResult/></bpelx:literal></bpelx:from>
+                          <bpelx:to expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">$processingResults/ns1:ProcessingResult</bpelx:to>
+                        </bpelx:insertBefore>
+                      </extensionAssignOperation>
+                      <copy bpelx:insertMissingToData="yes">
+                        <from>$validationResults/ns3:ValidationErrorList/ns3:ValidationError[$counter]/ns3:code</from>
+                        <to expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">$processingResults/ns1:ProcessingResult[1]/ns1:ResultCode</to>
+                      </copy>
+                      <copy bpelx:insertMissingToData="yes">
+                        <from>$validationResults/ns3:ValidationErrorList/ns3:ValidationError[$counter]/ns3:message</from>
+                        <to expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">$processingResults/ns1:ProcessingResult[1]/ns1:Description</to>
+                      </copy>
+                    </assign>
+                  </sequence>
+                </scope>
+              </forEach>
+              <else>
+                <documentation>
+                  <![CDATA[NoErrors]]>
+                </documentation>
+                <empty name="Empty7"/>
+              </else>
+            </if>
+          </sequence>
         </scope>
         <scope name="AirlineValueMap">
-          <empty name="Empty3"/>
+          <variables>
+            <variable name="iataCode" type="xsd:string"/>
+          </variables>
+          <sequence name="AirlineMapSequence">
+            <if name="IfValidICAO">
+              <documentation>
+                <![CDATA[Eq 2]]>
+              </documentation>
+              <condition expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">string-length($inputVariable.in/ns1:Carrier) = 2</condition>
+              <empty name="AssumingValid"/>
+              <elseif>
+                <documentation>
+                  <![CDATA[Eq 3]]>
+                </documentation>
+                <condition expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">string-length($inputVariable.in/ns1:Carrier) = 3</condition>
+                <sequence name="Sequence6">
+                  <assign name="icaoDVMLookup">
+                    <copy>
+                      <from>dvm:lookupValue('icaoToiataAirlineMapping.dvm', 'icaoAirlineCode', $inputVariable.in/ns1:Carrier, 'iataAirlineCode', 'XXX')</from>
+                      <to expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">$iataCode</to>
+                    </copy>
+                  </assign>
+                  <if name="IfValidICAOLookup">
+                    <documentation>
+                      <![CDATA[validICAOCode]]>
+                    </documentation>
+                    <condition>$iataCode != 'XXX'</condition>
+                    <empty name="Empty10"/>
+                    <else>
+                      <documentation>
+                        <![CDATA[eqXXX]]>
+                      </documentation>
+                      <extensionActivity>
+                        <bpelx:call name="ExitInvalidICAO" target="ReportError">
+                          <bpelx:param name="code" copyByValue="yes">411</bpelx:param>
+                          <bpelx:param name="summary" copyByValue="yes">"The 3 digit ICAO code is invalid"</bpelx:param>
+                          <bpelx:param name="description" copyByValue="yes">concat('The ICAO code ', $iataCode, ' is not found or invalid')</bpelx:param>
+                        </bpelx:call>
+                      </extensionActivity>
+                    </else>
+                  </if>
+                </sequence>
+              </elseif>
+              <else>
+                <documentation>
+                  <![CDATA[Invalid]]>
+                </documentation>
+                <sequence name="Sequence5">
+                  <extensionActivity>
+                    <bpelx:call name="ExitInvalidCarrier" target="ReportError">
+                      <bpelx:param name="code" copyByValue="yes">"332"</bpelx:param>
+                      <bpelx:param name="summary" copyByValue="yes">"Invalid Carrier"</bpelx:param>
+                      <bpelx:param name="description" copyByValue="yes">"Invalid Carrier"</bpelx:param>
+                    </bpelx:call>
+                  </extensionActivity>
+                </sequence>
+              </else>
+            </if>
+          </sequence>
         </scope>
         <scope name="ContinueOrReturn">
           <if name="IfValidationErrors">
-            <condition expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">count($processingResults/ns1:ProcessingResult) &gt; 0</condition>
+            <condition expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">count($processingResults/ns1:ProcessingResult) &gt; 0 and string-length($processingResults/ns1:ProcessingResult[1]/ns1:Description) &gt; 0</condition>
             <sequence name="Sequence1">
               <assign name="UpdateOutputVariable">
                 <extensionAssignOperation>
@@ -133,12 +288,10 @@
                     <bpelx:to expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">$outputVariable.out</bpelx:to>
                   </bpelx:append>
                 </extensionAssignOperation>
-                <extensionAssignOperation>
-                  <bpelx:append>
-                    <bpelx:from expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">$processingResults/ns1:ProcessingResult</bpelx:from>
-                    <bpelx:to expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">$outputVariable.out/ns1:ProcessingResults/ns1:ProcessingResult</bpelx:to>
-                  </bpelx:append>
-                </extensionAssignOperation>
+                <copy>
+                  <from expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">$processingResults/ns1:ProcessingResult</from>
+                  <to expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">$outputVariable.out/ns1:ProcessingResults/ns1:ProcessingResult</to>
+                </copy>
               </assign>
               <reply name="ReplyWithError" partnerLink="flightscheduleprocessor_client" variable="outputVariable"
                      portType="ns1:FlightScheduleServicePortType" operation="submitFlightSchedule"/>
