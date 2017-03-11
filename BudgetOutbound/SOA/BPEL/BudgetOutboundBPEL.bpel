@@ -1,0 +1,212 @@
+<?xml version = "1.0" encoding = "UTF-8" ?>
+<!--
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  Oracle JDeveloper BPEL Designer 
+  
+  Created: Sat Mar 11 11:34:15 EST 2017
+  Author:  lfallo1
+  Type: BPEL 2.0 Process
+  Purpose: One Way BPEL Process
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+-->
+<process name="BudgetOutboundBPEL"
+               targetNamespace="http://xmlns.oracle.com/FlightService/BudgetOutbound/BudgetOutboundBPEL"
+               xmlns="http://docs.oasis-open.org/wsbpel/2.0/process/executable"
+               xmlns:client="http://xmlns.oracle.com/FlightService/BudgetOutbound/BudgetOutboundBPEL"
+               xmlns:ora="http://schemas.oracle.com/xpath/extension"
+               xmlns:bpelx="http://schemas.oracle.com/bpel/extension"
+               xmlns:ui="http://xmlns.oracle.com/soa/designer"
+               xmlns:bpel="http://docs.oasis-open.org/wsbpel/2.0/process/executable" xmlns:ns1="http://www.example.org"
+         xmlns:ns2="http://xmlns.oracle.com/pcbpel/adapter/file/FlightService/BudgetOutbound/WriteBudgetReport"
+         xmlns:ns3="http://xmlns.oracle.com/pcbpel/adapter/file/FlightService/BudgetOutbound/ListFilesBudgetReport"
+         xmlns:ns4="http://xmlns.oracle.com/pcbpel/adapter/file/FlightService/BudgetOutbound/ReadFileBudgetReport"
+         xmlns:ns5="http://xmlns.oracle.com/fmw/mft/soap" xmlns:ns6="json" xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+         xmlns:ns7="http://xmlns.oracle.com/pcbpel/adapter/opaque/"
+         xmlns:oraext="http://www.oracle.com/XSL/Transform/java/oracle.tip.pc.services.functions.ExtFunc"
+         xmlns:bpm="http://xmlns.oracle.com/bpmn20/extensions"
+         xmlns:xp20="http://www.oracle.com/XSL/Transform/java/oracle.tip.pc.services.functions.Xpath20"
+         xmlns:ess="http://xmlns.oracle.com/scheduler" xmlns:hwf="http://xmlns.oracle.com/bpel/workflow/xpath"
+         xmlns:xref="http://www.oracle.com/XSL/Transform/java/oracle.tip.xref.xpath.XRefXPathFunctions"
+         xmlns:dvm="http://www.oracle.com/XSL/Transform/java/oracle.tip.dvm.LookupValue"
+         xmlns:bpws="http://schemas.xmlsoap.org/ws/2003/03/business-process/"
+         xmlns:xdk="http://schemas.oracle.com/bpel/extension/xpath/function/xdk"
+         xmlns:ids="http://xmlns.oracle.com/bpel/services/IdentityService/xpath"
+         xmlns:ldap="http://schemas.oracle.com/xpath/extension/ldap"
+         xmlns:ns8="http://xmlns.oracle.com/pcbpel/adapter/file/FlightService/BudgetOutbound/ListReportFiles"
+         xmlns:ns9="http://xmlns.oracle.com/FlightService/ErrorReportService/WriteErrorBPEL">
+  <bpelx:inlineSubProcess name="ErrorLogger">
+    <variables>
+      <variable name="code" type="xsd:int">
+        <from>0</from>
+      </variable>
+      <variable name="message" type="xsd:string">
+        <from>"Budget outbound error"</from>
+      </variable>
+    </variables>
+    <sequence>
+      <assign name="SetErrorMessage">
+        <copy>
+          <from>$code</from>
+          <to expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">$LogError_process_InputVariable.payload/ns1:code</to>
+        </copy>
+        <copy>
+          <from>$message</from>
+          <to expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">$LogError_process_InputVariable.payload/ns1:message</to>
+        </copy>
+      </assign>
+      <invoke name="LogError" partnerLink="ErrorReportService" portType="ns9:WriteErrorBPEL" operation="process"
+              inputVariable="LogError_process_InputVariable" bpelx:invokeAsDetail="no"/>
+      <exit name="Exit1"/>
+    </sequence>
+  </bpelx:inlineSubProcess>
+  <import namespace="http://schemas.oracle.com/bpel/extension" location="../WSDLs/RuntimeFault.wsdl"
+          importType="http://schemas.xmlsoap.org/wsdl/"/>
+  <import namespace="http://www.example.org" location="../Schemas/Budget.xsd"
+          importType="http://www.w3.org/2001/XMLSchema"/>
+  <import ui:processWSDL="true" namespace="http://xmlns.oracle.com/FlightService/BudgetOutbound/BudgetOutboundBPEL" location="../WSDLs/BudgetOutboundBPEL.wsdl" importType="http://schemas.xmlsoap.org/wsdl/"/>
+  <!-- 
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+      PARTNERLINKS                                                      
+      List of services participating in this BPEL process               
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  --> 
+  <partnerLinks>
+    <!-- 
+      The 'client' role represents the requester of this service. It is 
+      used for callback. The location and correlation information associated
+      with the client role are automatically set using WS-Addressing.
+    -->
+    <partnerLink name="budgetoutboundbpel_client" partnerLinkType="client:BudgetOutboundBPEL" myRole="BudgetOutboundBPELProvider"/>
+    <partnerLink name="ReadFileBudgetReport" partnerLinkType="ns4:SynchRead_plt" partnerRole="SynchRead_role"/>
+    <partnerLink name="BudgetOutboundSource" partnerLinkType="ns5:submit_plt" partnerRole="submit_role"/>
+    <partnerLink name="ReportWriterRest" bpelx:wadl="yes"/>
+    <partnerLink name="ListReportFiles" partnerLinkType="ns8:FileListing_plt" partnerRole="FileListing_role"/>
+    <partnerLink name="ErrorReportService" partnerLinkType="ns9:WriteErrorBPEL" partnerRole="WriteErrorBPELProvider"/>
+  </partnerLinks>
+
+  <!-- 
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+      VARIABLES                                                        
+      List of messages and XML documents used within this BPEL process 
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  -->
+  <variables>
+    <!-- Reference to the message passed as input during initiation -->
+    <variable name="inputVariable" messageType="client:BudgetOutboundBPELRequestMessage"/>
+    <variable name="DVMResult" element="ns1:BudgetFile"/>
+    <variable name="InvokeBudgetOutboundMFT_submit_InputVariable" messageType="ns5:MFTServiceRequest"/>
+    <variable name="InvokeBudgetOutboundMFT_submit_OutputVariable" messageType="ns5:MFTServiceResponse"/>
+    <variable name="RunReportOutput" bpelx:json="object"/>
+    <variable name="RunReportInput" bpelx:json="null"/>
+    <variable name="ReadFileBudgetReport_SynchRead_InputVariable" messageType="ns4:Empty_msg"/>
+    <variable name="ReadFileBudgetReport_SynchRead_OutputVariable" messageType="ns4:SynchRead_msg"/>
+    <variable name="ListReportFiles_FileListing_InputVariable" messageType="ns8:Empty_msg"/>
+    <variable name="ListReportFiles_FileListing_OutputVariable" messageType="ns8:FileListing_msg"/>
+    <variable name="LogError_process_InputVariable" messageType="ns9:WriteErrorBPELRequestMessage"/>
+  </variables>
+  <faultHandlers>
+    <catchAll>
+      <extensionActivity>
+        <bpelx:call name="FatalError" target="ErrorLogger">
+          <bpelx:param name="code" copyByValue="yes">501</bpelx:param>
+          <bpelx:param name="message" copyByValue="yes">'Fatal error while generating report'</bpelx:param>
+        </bpelx:call>
+      </extensionActivity>
+    </catchAll>
+  </faultHandlers>
+  <!-- 
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+     ORCHESTRATION LOGIC                                               
+     Set of activities coordinating the flow of messages across the    
+     services integrated within this business process                  
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  -->
+  <sequence name="main">
+
+    <!-- Receive input from requestor. (Note: This maps to operation defined in BudgetOutboundBPEL.wsdl) -->
+    <receive name="receiveInput" partnerLink="budgetoutboundbpel_client" portType="client:BudgetOutboundBPEL" operation="process" variable="inputVariable" createInstance="yes"/>
+    <scope name="RunReportScope">
+      <sequence>
+        <assign name="TransformDvm">
+          <bpelx:annotation>
+            <bpelx:pattern patternName="bpelx:transformation"></bpelx:pattern>
+          </bpelx:annotation>
+          <copy>
+            <from>ora:doXSLTransformForDoc("../Transformations/BudgetDVMLookupTransform.xsl", $inputVariable.payload)</from>
+            <to variable="DVMResult"/>
+          </copy>
+        </assign>
+        <if name="IfValidDvmResult">
+          <documentation>
+            <![CDATA[IfValid]]>
+          </documentation>
+          <condition>$DVMResult/ns1:FileName != 'Invalid'</condition>
+          <invoke name="RunReport" partnerLink="ReportWriterRest" bpelx:method="WriteReport"
+                  outputVariable="RunReportOutput" inputVariable="RunReportInput" bpelx:invokeAsDetail="no">
+            <bpelx:toProperties>
+              <bpelx:toProperty name="rest.binding.http.Authorization">"Basic bGZhbGxvMTpzbm9vcHk="</bpelx:toProperty>
+            </bpelx:toProperties>
+          </invoke>
+          <else>
+            <documentation>
+              <![CDATA[Error]]>
+            </documentation>
+            <extensionActivity>
+              <bpelx:call name="LogErrorRunReportError" target="ErrorLogger">
+                <bpelx:param name="code" copyByValue="yes">101</bpelx:param>
+                <bpelx:param name="message" copyByValue="yes">"Invalid interface code"</bpelx:param>
+              </bpelx:call>
+            </extensionActivity>
+          </else>
+        </if>
+      </sequence>
+    </scope>
+    <scope name="ReadFileScope">
+      <sequence name="Sequence2">
+        <invoke name="ListReportFiles" partnerLink="ListReportFiles"
+                portType="ns8:FileListing_ptt" operation="FileListing"
+                inputVariable="ListReportFiles_FileListing_InputVariable"
+                outputVariable="ListReportFiles_FileListing_OutputVariable" bpelx:invokeAsDetail="no">
+          <bpelx:toProperties>
+            <bpelx:toProperty name="jca.ftp.Directory">$DVMResult/ns1:TempDir</bpelx:toProperty>
+          </bpelx:toProperties>
+        </invoke>
+        <if name="IfReportExists">
+          <documentation>
+            <![CDATA[ReportExists]]>
+          </documentation>
+          <condition expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">$ListReportFiles_FileListing_OutputVariable.filelist/@size != '0' and $ListReportFiles_FileListing_OutputVariable.filelist/ns8:file/ns8:size != '0'</condition>
+          <sequence>
+            <invoke name="ReadFileBudgetReport" partnerLink="ReadFileBudgetReport" portType="ns4:SynchRead_ptt"
+                    operation="SynchRead" inputVariable="ReadFileBudgetReport_SynchRead_InputVariable"
+                    outputVariable="ReadFileBudgetReport_SynchRead_OutputVariable" bpelx:invokeAsDetail="no"/>
+            <assign name="AssignFileData">
+              <copy>
+                <from>$ReadFileBudgetReport_SynchRead_OutputVariable.opaque</from>
+                <to expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">$InvokeBudgetOutboundMFT_submit_InputVariable.payload/ns5:BinaryPayload</to>
+              </copy>
+              <copy>
+                <from>$DVMResult/ns1:FileName</from>
+                <to expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">$InvokeBudgetOutboundMFT_submit_InputVariable.qheader/ns5:TargetFilename</to>
+              </copy>
+            </assign>
+          </sequence>
+          <else>
+            <documentation>
+              <![CDATA[NotFoundError]]>
+            </documentation>
+            <extensionActivity>
+              <bpelx:call name="LogErrorFileNotFound" target="ErrorLogger">
+                <bpelx:param name="code" copyByValue="yes">102</bpelx:param>
+                <bpelx:param name="message" copyByValue="yes">concat('Unable to locate file at ', $DVMResult/ns1:TempDir)</bpelx:param>
+              </bpelx:call>
+            </extensionActivity>
+          </else>
+        </if>
+      </sequence>
+    </scope>
+    <invoke name="InvokeBudgetOutboundMFT" partnerLink="BudgetOutboundSource"
+            portType="ns5:submit_ptt" operation="submit" inputVariable="InvokeBudgetOutboundMFT_submit_InputVariable"
+            outputVariable="InvokeBudgetOutboundMFT_submit_OutputVariable" bpelx:invokeAsDetail="no"/>
+  </sequence>
+</process>

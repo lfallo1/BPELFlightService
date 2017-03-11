@@ -27,6 +27,8 @@
       <string v="oracle.jdeveloper.model.PathsConfiguration/ResourceBundlesContentSet"/>
    </list>
    <list n="listOfChildren">
+      <hash><url n="URL" path="BudgetOutbound/BudgetOutbound.jpr"/></hash>
+      <hash><url n="URL" path="ErrorReportService/ErrorReportService.jpr"/></hash>
       <hash><url n="URL" path="FlightServiceValidation/FlightServiceValidation.jpr"/></hash>
    </list>
 </jws:workspace>

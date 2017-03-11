@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dgm:gDiagram xmlns:dgm="http://xmlns.oracle.com/sca/soadgm">
+    <dgm:gService name="budgetoutboundbpel_client_ep">
+        <dgm:body borderWidth="2" arcRad="20" X="21" Y="238" width="137" height="84">
+            <dgm:borderColor r="153" g="153" b="153"/>
+            <dgm:bgColor r="255" g="255" b="255"/>
+        </dgm:body>
+        <dgm:shadow arcRad="20" X="11" Y="231" width="156" height="98">
+            <dgm:bgColor r="196" g="228" b="240"/>
+        </dgm:shadow>
+        <dgm:outputPort name="budgetoutboundbpel_client_ep" X="127" Y="0" diameter="20" imageURI="oracle/tip/tools/ide/fabric/resource/image/visuals_rd1/servicereference.png" interface="http://xmlns.oracle.com/FlightService/BudgetOutbound/BudgetOutboundBPEL#wsdl.interface(BudgetOutboundBPEL)"/>
+        <dgm:nodeIcon URI="/oracle/tip/tools/ide/adapters/designtime/adapter/images/soap_service_20x20.png" X="20" Y="4" width="20" height="20"/>
+        <dgm:operations>
+            <dgm:item>process</dgm:item>
+        </dgm:operations>
+    </dgm:gService>
+    <dgm:gReference name="ReadFileBudgetReport">
+        <dgm:body borderWidth="2" arcRad="20" X="946" Y="26" width="136" height="84">
+            <dgm:borderColor r="153" g="153" b="153"/>
+            <dgm:bgColor r="255" g="255" b="255"/>
+        </dgm:body>
+        <dgm:shadow arcRad="20" X="936" Y="19" width="156" height="98">
+            <dgm:bgColor r="196" g="228" b="240"/>
+        </dgm:shadow>
+        <dgm:inputPort name="ReadFileBudgetReport" X="-10" Y="0" diameter="20" imageURI="oracle/tip/tools/ide/fabric/resource/image/visuals_rd1/servicereference.png" interface="http://xmlns.oracle.com/pcbpel/adapter/file/FlightService/BudgetOutbound/ReadFileBudgetReport#wsdl.interface(SynchRead_ptt)"/>
+        <dgm:nodeIcon URI="/oracle/tip/tools/ide/adapters/designtime/adapter/images/file_adapter_20x20.png" X="27" Y="4" width="20" height="20"/>
+        <dgm:operations>
+            <dgm:item>SynchRead</dgm:item>
+        </dgm:operations>
+    </dgm:gReference>
+    <dgm:gReference name="BudgetOutboundSource">
+        <dgm:body borderWidth="2" arcRad="20" X="946" Y="144" width="136" height="84">
+            <dgm:borderColor r="153" g="153" b="153"/>
+            <dgm:bgColor r="255" g="255" b="255"/>
+        </dgm:body>
+        <dgm:shadow arcRad="20" X="936" Y="137" width="156" height="98">
+            <dgm:bgColor r="196" g="228" b="240"/>
+        </dgm:shadow>
+        <dgm:inputPort name="BudgetOutboundSource" X="-10" Y="0" diameter="20" imageURI="oracle/tip/tools/ide/fabric/resource/image/visuals_rd1/servicereference.png" interface="http://xmlns.oracle.com/fmw/mft/soap#wsdl.interface(submit_ptt)"/>
+        <dgm:nodeIcon URI="/oracle/tip/tools/ide/adapters/designtime/adapter/images/mft_adapter_20x20.png" X="27" Y="4" width="20" height="20"/>
+        <dgm:operations>
+            <dgm:item>submit</dgm:item>
+        </dgm:operations>
+    </dgm:gReference>
+    <dgm:gReference name="ReportWriterRest">
+        <dgm:body borderWidth="2" arcRad="20" X="946" Y="262" width="136" height="84">
+            <dgm:borderColor r="153" g="153" b="153"/>
+            <dgm:bgColor r="255" g="255" b="255"/>
+        </dgm:body>
+        <dgm:shadow arcRad="20" X="936" Y="255" width="156" height="98">
+            <dgm:bgColor r="196" g="228" b="240"/>
+        </dgm:shadow>
+        <dgm:inputPort name="ReportWriterRest" X="-10" Y="0" diameter="20" imageURI="oracle/tip/tools/ide/fabric/resource/image/visuals_rd1/servicereference.png" interface="WADLs/ReportWriterRest.wadl"/>
+        <dgm:nodeIcon URI="/oracle/tip/tools/ide/adapters/designtime/adapter/images/RestAdapterService20x20px.png" X="27" Y="4" width="20" height="20"/>
+        <dgm:operations>
+            <dgm:item>WriteReport</dgm:item>
+        </dgm:operations>
+    </dgm:gReference>
+    <dgm:gReference name="ListReportFiles">
+        <dgm:body borderWidth="2" arcRad="20" X="946" Y="380" width="136" height="84">
+            <dgm:borderColor r="153" g="153" b="153"/>
+            <dgm:bgColor r="255" g="255" b="255"/>
+        </dgm:body>
+        <dgm:shadow arcRad="20" X="936" Y="373" width="156" height="98">
+            <dgm:bgColor r="196" g="228" b="240"/>
+        </dgm:shadow>
+        <dgm:inputPort name="ListReportFiles" X="-10" Y="0" diameter="20" imageURI="oracle/tip/tools/ide/fabric/resource/image/visuals_rd1/servicereference.png" interface="http://xmlns.oracle.com/pcbpel/adapter/file/FlightService/BudgetOutbound/ListReportFiles#wsdl.interface(FileListing_ptt)"/>
+        <dgm:nodeIcon URI="/oracle/tip/tools/ide/adapters/designtime/adapter/images/file_adapter_20x20.png" X="27" Y="4" width="20" height="20"/>
+        <dgm:operations>
+            <dgm:item>FileListing</dgm:item>
+        </dgm:operations>
+    </dgm:gReference>
+    <dgm:gReference name="ErrorReportService">
+        <dgm:body borderWidth="2" arcRad="20" X="946" Y="498" width="136" height="84">
+            <dgm:borderColor r="153" g="153" b="153"/>
+            <dgm:bgColor r="255" g="255" b="255"/>
+        </dgm:body>
+        <dgm:shadow arcRad="20" X="936" Y="491" width="156" height="98">
+            <dgm:bgColor r="196" g="228" b="240"/>
+        </dgm:shadow>
+        <dgm:inputPort name="ErrorReportService" X="-10" Y="0" diameter="20" imageURI="oracle/tip/tools/ide/fabric/resource/image/visuals_rd1/servicereference.png" interface="http://xmlns.oracle.com/FlightService/ErrorReportService/WriteErrorBPEL#wsdl.interface(WriteErrorBPEL)"/>
+        <dgm:nodeIcon URI="/oracle/tip/tools/ide/adapters/designtime/adapter/images/soap_service_20x20.png" X="27" Y="4" width="20" height="20"/>
+        <dgm:operations>
+            <dgm:item>process</dgm:item>
+        </dgm:operations>
+    </dgm:gReference>
+    <dgm:gComponent name="BudgetOutboundBPEL">
+        <dgm:body borderWidth="2" arcRad="20" X="487" Y="223" width="130" height="161">
+            <dgm:borderColor r="69" g="113" b="140"/>
+            <dgm:lightBgColor r="166" g="208" b="230"/>
+            <dgm:darkBgColor r="99" g="162" b="201"/>
+        </dgm:body>
+        <dgm:shadow arcRad="20" X="477" Y="216" width="150" height="177">
+            <dgm:bgColor r="196" g="228" b="240"/>
+        </dgm:shadow>
+        <dgm:inputPort name="budgetoutboundbpel_client" X="-10" Y="15" diameter="20" imageURI="oracle/tip/tools/ide/fabric/resource/image/visuals_rd1/servicereference.png" interface="http://xmlns.oracle.com/FlightService/BudgetOutbound/BudgetOutboundBPEL#wsdl.interface(BudgetOutboundBPEL)"/>
+        <dgm:outputPort name="ReadFileBudgetReport" X="120" Y="15" diameter="20" imageURI="oracle/tip/tools/ide/fabric/resource/image/visuals_rd1/servicereference.png" interface="http://xmlns.oracle.com/pcbpel/adapter/file/FlightService/BudgetOutbound/ReadFileBudgetReport#wsdl.interface(SynchRead_ptt)"/>
+        <dgm:outputPort name="BudgetOutboundSource" X="120" Y="40" diameter="20" imageURI="oracle/tip/tools/ide/fabric/resource/image/visuals_rd1/servicereference.png" interface="http://xmlns.oracle.com/fmw/mft/soap#wsdl.interface(submit_ptt)"/>
+        <dgm:outputPort name="ReportWriterRest" X="120" Y="65" diameter="20" imageURI="oracle/tip/tools/ide/fabric/resource/image/visuals_rd1/servicereference.png" interface="WADLs/ReportWriterRest.wadl"/>
+        <dgm:outputPort name="ListReportFiles" X="120" Y="90" diameter="20" imageURI="oracle/tip/tools/ide/fabric/resource/image/visuals_rd1/servicereference.png" interface="http://xmlns.oracle.com/pcbpel/adapter/file/FlightService/BudgetOutbound/ListReportFiles#wsdl.interface(FileListing_ptt)"/>
+        <dgm:outputPort name="ErrorReportService" X="120" Y="115" diameter="20" imageURI="oracle/tip/tools/ide/fabric/resource/image/visuals_rd1/servicereference.png" interface="http://xmlns.oracle.com/FlightService/ErrorReportService/WriteErrorBPEL#wsdl.interface(WriteErrorBPEL)"/>
+        <dgm:nodeIcon URI="/oracle/tip/tools/ide/bpel/shared/plugins/resources/images/soa/process_20x20.png" X="10" Y="4" width="20" height="20"/>
+    </dgm:gComponent>
+    <dgm:gWireLink source="budgetoutboundbpel_client_ep" target="BudgetOutboundBPEL/budgetoutboundbpel_client" width="2">
+        <dgm:gSegment X1="168" Y1="248" X2="477" Y2="248"/>
+        <dgm:baseColor r="153" g="153" b="153"/>
+        <dgm:selectedColor r="49" g="106" b="196"/>
+    </dgm:gWireLink>
+    <dgm:gWireLink source="BudgetOutboundBPEL/ReadFileBudgetReport" target="ReadFileBudgetReport" width="2">
+        <dgm:gSegment X1="627" Y1="248" X2="651" Y2="248"/>
+        <dgm:gSegment X1="651" Y1="248" X2="651" Y2="36"/>
+        <dgm:gSegment X1="651" Y1="36" X2="936" Y2="36"/>
+        <dgm:baseColor r="153" g="153" b="153"/>
+        <dgm:selectedColor r="49" g="106" b="196"/>
+    </dgm:gWireLink>
+    <dgm:gWireLink source="BudgetOutboundBPEL/BudgetOutboundSource" target="BudgetOutboundSource" width="2">
+        <dgm:gSegment X1="627" Y1="273" X2="666" Y2="273"/>
+        <dgm:gSegment X1="666" Y1="273" X2="666" Y2="154"/>
+        <dgm:gSegment X1="666" Y1="154" X2="936" Y2="154"/>
+        <dgm:baseColor r="153" g="153" b="153"/>
+        <dgm:selectedColor r="49" g="106" b="196"/>
+    </dgm:gWireLink>
+    <dgm:gWireLink source="BudgetOutboundBPEL/ReportWriterRest" target="ReportWriterRest" width="2">
+        <dgm:gSegment X1="627" Y1="298" X2="681" Y2="298"/>
+        <dgm:gSegment X1="681" Y1="298" X2="681" Y2="272"/>
+        <dgm:gSegment X1="681" Y1="272" X2="936" Y2="272"/>
+        <dgm:baseColor r="153" g="153" b="153"/>
+        <dgm:selectedColor r="49" g="106" b="196"/>
+    </dgm:gWireLink>
+    <dgm:gWireLink source="BudgetOutboundBPEL/ListReportFiles" target="ListReportFiles" width="2">
+        <dgm:gSegment X1="627" Y1="323" X2="666" Y2="323"/>
+        <dgm:gSegment X1="666" Y1="323" X2="666" Y2="390"/>
+        <dgm:gSegment X1="666" Y1="390" X2="936" Y2="390"/>
+        <dgm:baseColor r="153" g="153" b="153"/>
+        <dgm:selectedColor r="49" g="106" b="196"/>
+    </dgm:gWireLink>
+    <dgm:gWireLink source="BudgetOutboundBPEL/ErrorReportService" target="ErrorReportService" width="2">
+        <dgm:gSegment X1="627" Y1="348" X2="651" Y2="348"/>
+        <dgm:gSegment X1="651" Y1="348" X2="651" Y2="508"/>
+        <dgm:gSegment X1="651" Y1="508" X2="936" Y2="508"/>
+        <dgm:baseColor r="153" g="153" b="153"/>
+        <dgm:selectedColor r="49" g="106" b="196"/>
+    </dgm:gWireLink>
+</dgm:gDiagram>

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="windows-1252" ?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://www.example.org"
+            targetNamespace="http://www.example.org" elementFormDefault="qualified">
+  <xsd:element name="BudgetOutboundRequest">
+    <xsd:annotation>
+      <xsd:documentation>A sample element</xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexType>
+      <xsd:sequence>
+        <xsd:element name="request" type="BudgetOutboundRequestType"/>
+      </xsd:sequence>
+    </xsd:complexType>
+  </xsd:element>
+  <xsd:complexType name="BudgetOutboundRequestType">
+    <xsd:sequence>
+      <xsd:element name="InterfaceCode" type="xsd:string"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:element name="BudgetFile">
+    <xsd:complexType>
+      <xsd:sequence>
+        <xsd:element name="InterfaceCode" type="xsd:string"/>
+        <xsd:element name="OutputDir" type="xsd:string"/>
+        <xsd:element name="TempDir" type="xsd:string"/>
+        <xsd:element name="FileName" type="xsd:string"/>
+      </xsd:sequence>
+    </xsd:complexType>
+  </xsd:element>
+</xsd:schema>

@@ -1,0 +1,103 @@
+<wsdl:definitions
+     name="BudgetOutboundSource"
+     targetNamespace="http://xmlns.oracle.com/fmw/mft/soap"
+     xmlns:tns="http://xmlns.oracle.com/fmw/mft/soap"
+     xmlns:plt="http://schemas.xmlsoap.org/ws/2003/05/partner-link/"
+     xmlns:mftconfig="http://xmlns.oracle.com/fmw/mft/config/"
+     xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+     xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+    >
+  <plt:partnerLinkType name="submit_plt" >
+    <plt:role name="submit_role" >
+      <plt:portType name="tns:submit_ptt" />
+    </plt:role>
+  </plt:partnerLinkType>
+    <wsdl:types>
+    <schema targetNamespace="http://xmlns.oracle.com/fmw/mft/soap" xmlns="http://www.w3.org/2001/XMLSchema" version="1.0"
+            elementFormDefault="qualified">
+      <complexType name="DeliveryOnlyType">
+        <sequence>
+          <element minOccurs="0" name="TargetFilesize" type="long"/>
+          <element minOccurs="0" name="SourceUser" type="string"/>
+          <element minOccurs="0" name="TransferURL" type="string"/>
+          <element minOccurs="0" name="SourceName" type="string"/>
+          <element minOccurs="0" name="TargetName" type="string"/>
+          <element minOccurs="0" name="TransferName" type="string"/>
+        </sequence>
+      </complexType>
+      <complexType name="MFTHeaderType">
+        <sequence>
+          <element minOccurs="0" name="TargetFilename" type="string"/>
+          <element minOccurs="0" name="ContentIdentifier" type="string"/>
+          <element name="DeliveryOnly" type="tns:DeliveryOnlyType"/>
+        </sequence>
+      </complexType>
+      <complexType name="FileReferenceType">
+        <sequence>
+          <element name="URL" type="anyURI"/>
+        </sequence>
+      </complexType>
+      <complexType name="FTPReferenceType">
+        <sequence>
+          <element name="URL" type="anyURI"/>
+        </sequence>
+      </complexType>
+      <complexType name="MFTServiceInputType">
+        <choice maxOccurs="1" minOccurs="1">
+          <element name="FileReference" type="tns:FileReferenceType"/>
+          <element name="FTPReference" type="tns:FTPReferenceType"/>
+          <element name="InlinePayload" type="anyType"/>
+          <element name="BinaryPayload" type="base64Binary"/>
+        </choice>
+        <attribute name="PayloadType" default="FtpRefFile" type="string"/>
+      </complexType>
+      <element name="MFTServiceInput" type="tns:MFTServiceInputType"/>
+      <element name="MFTServiceResponse" type="anyType"/>
+      <element name="MFTServiceFault" type="anyType"/>
+      <element name="MFTHeader" type="tns:MFTHeaderType"/>
+    </schema>
+    </wsdl:types>
+    <wsdl:message name="MFTServiceRequest">
+        <wsdl:part name="payload" element="tns:MFTServiceInput"/>
+        <wsdl:part name="qheader" element="tns:MFTHeader"/>
+    </wsdl:message>
+    <wsdl:message name="MFTServiceResponse">
+        <wsdl:part name="payload" element="tns:MFTServiceResponse"/>
+    </wsdl:message>
+    <wsdl:message name="MFTServiceFaultMessage">
+        <wsdl:part name="payload" element="tns:MFTServiceFault"/>
+    </wsdl:message>
+    <wsdl:portType name="submit_ptt">
+        <wsdl:operation name="submit">
+           <mftconfig:parameters 
+               UIMFTSource="BudgetSOA"
+               UISOAServer="mft_server1"
+               UIConnectionName="saibot_domain" />
+            <wsdl:input message="tns:MFTServiceRequest"/>
+            <wsdl:output message="tns:MFTServiceResponse"/>
+            <wsdl:fault name="MFTServiceFault" message="tns:MFTServiceFaultMessage"/>
+        </wsdl:operation>
+    </wsdl:portType>
+    <wsdl:binding name="submit_pttBinding" type="tns:submit_ptt">
+        <soap:binding transport="http://schemas.xmlsoap.org/soap/http"/>
+        <wsdl:operation name="submit">
+            <soap:operation style="document" soapAction="submit"/>
+            <wsdl:input>
+                <soap:body use="literal" namespace="http://xmlns.oracle.com/fmw/mft/soap" parts="payload"/>
+                <soap:header message="tns:MFTServiceRequest" part="qheader" use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal" namespace="http://xmlns.oracle.com/fmw/mft/soap"/>
+            </wsdl:output>
+            <wsdl:fault name="MFTServiceFault">
+                <soap:fault name="MFTServiceFault" use="literal"/>
+            </wsdl:fault>
+        </wsdl:operation>
+    </wsdl:binding>
+    <wsdl:service name="MFTService">
+        <wsdl:documentation>MFT Service</wsdl:documentation>
+        <wsdl:port name="MFTServicePort" binding="tns:submit_pttBinding">
+            <soap:address location="http://localhost:7003/mftapp/services/transfer/BudgetSoaSource"/>
+        </wsdl:port>
+    </wsdl:service>
+</wsdl:definitions>

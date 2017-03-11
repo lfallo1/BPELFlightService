@@ -1,0 +1,30 @@
+<?xml version= '1.0' encoding= 'UTF-8' ?>
+<wsdl:definitions
+     name="BudgetOutboundBPEL"
+     targetNamespace="http://xmlns.oracle.com/FlightService/BudgetOutbound/BudgetOutboundBPEL"
+     xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+     xmlns:client="http://xmlns.oracle.com/FlightService/BudgetOutbound/BudgetOutboundBPEL"
+     xmlns:ns1="http://www.example.org"
+     xmlns:plnk="http://docs.oasis-open.org/wsbpel/2.0/plnktype"
+     xmlns:ns2="http://schemas.oracle.com/bpel/extension"
+    >
+    <plnk:partnerLinkType name="BudgetOutboundBPEL">
+        <plnk:role name="BudgetOutboundBPELProvider" portType="client:BudgetOutboundBPEL"/>
+    </plnk:partnerLinkType>
+    <wsdl:import namespace="http://schemas.oracle.com/bpel/extension" location="RuntimeFault.wsdl"/>
+    <wsdl:types>
+        <schema xmlns="http://www.w3.org/2001/XMLSchema" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+             xmlns:client="http://xmlns.oracle.com/FlightService/BudgetOutbound/BudgetOutboundBPEL"
+             xmlns:ns1="http://www.example.org" xmlns:plnk="http://docs.oasis-open.org/wsbpel/2.0/plnktype">
+            <import namespace="http://www.example.org" schemaLocation="../Schemas/Budget.xsd"/>
+        </schema>
+    </wsdl:types>
+    <wsdl:message name="BudgetOutboundBPELRequestMessage">
+        <wsdl:part name="payload" element="ns1:BudgetOutboundRequest"/>
+    </wsdl:message>
+    <wsdl:portType name="BudgetOutboundBPEL">
+        <wsdl:operation name="process">
+            <wsdl:input message="client:BudgetOutboundBPELRequestMessage"/>
+        </wsdl:operation>
+    </wsdl:portType>
+</wsdl:definitions>

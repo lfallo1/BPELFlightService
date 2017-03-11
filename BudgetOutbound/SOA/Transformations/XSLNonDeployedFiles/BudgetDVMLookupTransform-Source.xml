@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<BudgetOutboundRequest xmlns="http://www.example.org">
+   <request>
+      <InterfaceCode>BUDGET_001</InterfaceCode>
+   </request>
+</BudgetOutboundRequest>

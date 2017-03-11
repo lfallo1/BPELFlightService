@@ -1,0 +1,12 @@
+<adapter-config name="ReadFileBudgetReport" adapter="file" wsdlLocation="../WSDLs/ReadFileBudgetReport.wsdl" xmlns="http://platform.integration.oracle/blocks/adapter/fw/metadata">
+  
+  <connection-factory location="eis/FileAdapter"/>
+  <endpoint-interaction portType="SynchRead_ptt" operation="SynchRead">
+    <interaction-spec className="oracle.tip.adapter.file.outbound.FileReadInteractionSpec">
+      <property name="PhysicalDirectory" value="C:\Users\lfallo1\Desktop\budget\tmp"/>
+      <property name="FileName" value="Budget.txt"/>
+      <property name="DeleteFile" value="true"/>
+    </interaction-spec>
+  </endpoint-interaction>
+
+</adapter-config>
